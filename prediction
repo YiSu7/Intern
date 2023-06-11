@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[26]:
+
+
+import pandas as pd
+from prophet import Prophet
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+# In[33]:
+
+
+path = "/Users/suyi/Downloads/WAenrollmentbymonth.csv"
+df = pd.read_csv(path)
+df
+
+
+# In[36]:
+
+
+if df.columns.duplicated().any():
+    df = df.loc[:, ~df.columns.duplicated()]  # Remove duplicate columns
+    print("Duplicate column names found and removed.")
+
+# Rename the columns to 'ds' and 'y'
+df = df.rename(columns={'Month': 'ds', 'Enrollment': 'y'})
+
+# Convert 'ds' column to datetime
+df['ds'] = pd.to_datetime(df['ds'])
+
+# Create and fit the Prophet model
+model = Prophet()
+model.fit(df)
+
+# Generate future dates for predictions
+future_dates = model.make_future_dataframe(periods=120, freq='M')
+
+# Make predictions
+predictions = model.predict(future_dates)
+
+
+# In[ ]:
+
+
+
+
+
+# In[37]:
+
+
+fig = model.plot(predictions)
+plt.xlabel('Date')
+plt.ylabel('Value')
+plt.title('Prophet Forecast')
+plt.show()
+
+
+# In[39]:
+
+
+# Extract the actual values from the historical data
+actual_values = df['y'].values
+
+# Extract the predicted values from the predictions dataframe
+predicted_values = predictions['yhat'].values[:len(actual_values)]
+
+# Calculate the Mean Absolute Error (MAE)
+mae = np.mean(np.abs(actual_values - predicted_values))
+print(f"Mean Absolute Error (MAE): {mae}")
+
+
+# In[1]:
+
+
+# Convert the predictions to a DataFrame
+predictions_df = predictions[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+
+# Define the file path and name
+file_path = 'predictions.csv'  # Save in the current directory
+
+# Save the predictions DataFrame as a CSV file
+predictions_df.to_csv(file_path, index=False)
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
